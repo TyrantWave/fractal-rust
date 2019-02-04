@@ -7,3 +7,5 @@ edition = "2018"
 [dependencies]
 num = "*"
 image = "*"
+num_cpus = "1.0"
+crossbeam = "0.7"
