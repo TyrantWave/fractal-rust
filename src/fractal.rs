@@ -20,12 +20,17 @@ impl FractalResult {
     }
 }
 
+/// Flag for the render function to decide which equation to use
+pub enum Fractals {
+    MANDEL,
+    JULIA,
+}
+
 /// Try to determine if `c` is in the Mandelbrot set, using
 /// at most `limit` iterations.
 ///
-/// If `c` is not a member, return `Some(i)`, where `i` is the number of iterations
-/// taken to escape. If `c` appears to be a member, return `None`.
-fn escape_time(c: Complex<f64>, limit: u32) -> FractalResult {
+/// Returns a `FractalResult`, with a pair consisting of the escape value and final z value
+fn mandelbrot(c: Complex<f64>, limit: u32) -> FractalResult {
     let mut z = Complex { re: 0.0, im: 0.0 };
     for i in 0..limit {
         z = z * z + c;
@@ -41,6 +46,12 @@ fn escape_time(c: Complex<f64>, limit: u32) -> FractalResult {
         escape: 0,
         value: z,
     }
+}
+
+/// Try to determine if `z` is in the Julia set, using
+/// at most `limit` iterations.
+fn julia(z: Complex<f64>, seed: Complex<f64>, limit: u32) -> FractalResult {
+    unimplemented!()
 }
 
 /// Parse the string `s` as a coordinate pair, like `"400x600"` or `"1.0,1.5"`.
@@ -92,23 +103,27 @@ pub fn pixel_to_point(
     }
 }
 
-/// Render a rectangle of the Mandelbrot set into a buffer of pixels.
+/// Render a rectangle of the `method` set into a buffer of pixels.
 ///
 /// `bounds` gives the width and height of the buffer `pixels`,
 /// which holds one greyscale pixel per byte. The `upper_left` and `lower_right`
 /// arguments specify points on the complex plane corresponding to the given corners of the pixel buffer.
-pub fn render_mandelbrot(
+pub fn render_to_result(
     pixels: &mut [FractalResult],
     bounds: (usize, usize),
     upper_left: Complex<f64>,
     lower_right: Complex<f64>,
+    method: Fractals,
 ) {
     assert!(pixels.len() == bounds.0 * bounds.1);
 
     for row in 0..bounds.1 {
         for column in 0..bounds.0 {
             let point = pixel_to_point(bounds, (column, row), upper_left, lower_right);
-            pixels[row * bounds.0 + column] = escape_time(point, 255);
+            pixels[row * bounds.0 + column] = match method {
+                Fractals::MANDEL => mandelbrot(point, 255),
+                Fractals::JULIA => julia(Complex { re: 0.0, im: 0.0 }, point, 255),
+            };
         }
     }
 }
