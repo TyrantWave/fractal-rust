@@ -8,7 +8,7 @@ mod fractal;
 use fractal::*;
 
 mod coloring;
-use coloring::binary_decomposition;
+use coloring::*;
 
 /// Write the given buffer of `pixels`, with dimensions `bounds` into the file `filename`.
 fn write_image(
@@ -67,7 +67,13 @@ fn main() {
                     pixel_to_point(bounds, (bounds.0, top + height), upper_left, lower_right);
 
                 spawner.spawn(move |_| {
-                    render_mandelbrot(band, band_bounds, band_upper_left, band_lower_right);
+                    render_to_result(
+                        band,
+                        band_bounds,
+                        band_upper_left,
+                        band_lower_right,
+                        Fractals::MANDEL,
+                    );
                 });
             }
         }) {
@@ -80,9 +86,10 @@ fn main() {
     }
 
     // Convert our results into a pixels array to draw. Just draw the escape value for the default function.
-    // let pixels: Vec<u8> = results.into_iter().map(|res| res.escape as u8).collect();
-    // Alternatively, grab the binary decomposition of the results.
-    let pixels: Vec<u8> = binary_decomposition(&results);
+    let pixels: Vec<u8> = results.into_iter().map(|res| res.escape as u8).collect();
+    // Alternatively, use a coloring method on a set of the results.
+    // let pixels: Vec<u8> = binary_decomposition(&results);
+    // let pixels: Vec<u8> = standard_color(&results, StandardColors::SUM);
 
     write_image(&args[1], &pixels, bounds).expect("error writing PNG file");
 }
