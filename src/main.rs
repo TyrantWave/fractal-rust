@@ -7,6 +7,9 @@ use std::io::Write;
 mod fractal;
 use fractal::*;
 
+mod coloring;
+use coloring::binary_decomposition;
+
 /// Write the given buffer of `pixels`, with dimensions `bounds` into the file `filename`.
 fn write_image(
     filename: &str,
@@ -45,14 +48,15 @@ fn main() {
     let upper_left = parse_complex(&args[3]).expect("error parsing upper left corner point");
     let lower_right = parse_complex(&args[4]).expect("error parsing lower right corner point");
 
-    // Output buffer we're going to use to render to an image
-    let mut pixels = vec![0; bounds.0 * bounds.1];
+    // Output results we're going to use to render to an image
+    let mut results = vec![FractalResult::zero(); bounds.0 * bounds.1];
 
     // Spawning threads based on available CPUs
     let threads = num_cpus::get();
     let rows_per_band = bounds.1 / threads + 1;
     {
-        let bands: Vec<&mut [u8]> = pixels.chunks_mut(rows_per_band * bounds.0).collect();
+        let bands: Vec<&mut [FractalResult]> =
+            results.chunks_mut(rows_per_band * bounds.0).collect();
         match crossbeam::scope(|spawner| {
             for (i, band) in bands.into_iter().enumerate() {
                 let top = rows_per_band * i;
@@ -74,6 +78,11 @@ fn main() {
             Ok(_) => (),
         };
     }
+
+    // Convert our results into a pixels array to draw. Just draw the escape value for the default function.
+    // let pixels: Vec<u8> = results.into_iter().map(|res| res.escape as u8).collect();
+    // Alternatively, grab the binary decomposition of the results.
+    let pixels: Vec<u8> = binary_decomposition(&results);
 
     write_image(&args[1], &pixels, bounds).expect("error writing PNG file");
 }
