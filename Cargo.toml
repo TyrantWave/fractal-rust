@@ -1,11 +1,10 @@
 [package]
 name = "fractal"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Christopher Johns <tyrantwave@gmail.com>"]
 edition = "2018"
 
 [dependencies]
 num = "*"
 image = "*"
-num_cpus = "1.0"
-crossbeam = "0.7"
+rayon = "*"

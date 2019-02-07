@@ -42,7 +42,7 @@ impl FromStr for Fractal {
 
 impl Fractal {
     /// Given a type of Fractal, calculate the result
-    fn calculate(&self, c: Complex<f64>, seed: Complex<f64>, limit: u32) -> FractalResult {
+    pub fn calculate(&self, c: Complex<f64>, seed: Complex<f64>, limit: u32) -> FractalResult {
         match self {
             Fractal::MANDELBROT => mandelbrot(c, seed, limit),
             Fractal::JULIA => julia(c, seed, limit),
@@ -159,32 +159,7 @@ pub fn pixel_to_point(
     );
     Complex {
         re: upper_left.re + pixel.0 as f64 * width / bounds.0 as f64,
-        im: upper_left.im - pixel.1 as f64 * height / bounds.1 as f64, // Why subtraction here? pixel.1 increases as we go down,
-                                                                       // but the imaginary component increases as we go up.
-    }
-}
-
-/// Render a rectangle of the `method` set into a buffer of pixels.
-///
-/// `bounds` gives the width and height of the buffer `pixels`,
-/// which holds one greyscale pixel per byte. The `upper_left` and `lower_right`
-/// arguments specify points on the complex plane corresponding to the given corners of the pixel buffer.
-pub fn render_to_result(
-    pixels: &mut [FractalResult],
-    bounds: (usize, usize),
-    upper_left: Complex<f64>,
-    lower_right: Complex<f64>,
-    method: Fractal,
-    seed: Complex<f64>,
-    limit: u32,
-) {
-    assert!(pixels.len() == bounds.0 * bounds.1);
-
-    for row in 0..bounds.1 {
-        for column in 0..bounds.0 {
-            let point = pixel_to_point(bounds, (column, row), upper_left, lower_right);
-            pixels[row * bounds.0 + column] = method.calculate(point, seed, limit);
-        }
+        im: upper_left.im - pixel.1 as f64 * height / bounds.1 as f64,
     }
 }
 
