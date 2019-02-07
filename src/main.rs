@@ -3,6 +3,7 @@ use image::ColorType;
 
 use std::fs::File;
 use std::io::Write;
+use std::str::FromStr;
 
 mod fractal;
 use fractal::*;
@@ -30,23 +31,32 @@ fn write_image(
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() != 5 {
+    if args.len() != 8 {
         writeln!(
             std::io::stderr(),
-            "Usage: fractal FILE PIXELS UPPERLEFT LOWERRIGHT"
+            "Usage: fractal FILE METHOD PIXELS UPPERLEFT LOWERRIGHT SEED LIMIT"
         )
         .unwrap();
         writeln!(
             std::io::stderr(),
-            "Example: {} mandel.png 1000x750 -1.20,0.35 -1,0.20",
+            "Example: {} mandel.png  mandelbrot 1000x750 -1.20,0.35 -1,0.20 0,0 255",
+            args[0]
+        )
+        .unwrap();
+        writeln!(
+            std::io::stderr(),
+            "Example: {} julia.png julia 1000x750 -1.50,1 1.5,-1 -0.8,0.156 255",
             args[0]
         )
         .unwrap();
         std::process::exit(1);
     }
-    let bounds = parse_pair(&args[2], 'x').expect("error parsing image dimensions");
-    let upper_left = parse_complex(&args[3]).expect("error parsing upper left corner point");
-    let lower_right = parse_complex(&args[4]).expect("error parsing lower right corner point");
+    let method = Fractal::from_str(&args[2]).expect("error parsing fractal method");
+    let bounds = parse_pair(&args[3], 'x').expect("error parsing image dimensions");
+    let upper_left = parse_complex(&args[4]).expect("error parsing upper left corner point");
+    let lower_right = parse_complex(&args[5]).expect("error parsing lower right corner point");
+    let seed = parse_complex(&args[6]).expect("error parsing seeded value");
+    let limit = u32::from_str(&args[7]).expect("error parsing limit");
 
     // Output results we're going to use to render to an image
     let mut results = vec![FractalResult::zero(); bounds.0 * bounds.1];
@@ -72,7 +82,9 @@ fn main() {
                         band_bounds,
                         band_upper_left,
                         band_lower_right,
-                        Fractals::MANDEL,
+                        method,
+                        seed,
+                        limit,
                     );
                 });
             }

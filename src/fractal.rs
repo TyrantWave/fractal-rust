@@ -1,5 +1,4 @@
 use num::complex::Complex;
-
 use std::str::FromStr;
 
 /// Result given from a fractal calculation.
@@ -21,17 +20,40 @@ impl FractalResult {
 }
 
 /// Flag for the render function to decide which equation to use
-pub enum Fractals {
-    MANDEL,
+#[derive(Copy, Clone)]
+pub enum Fractal {
+    MANDELBROT,
     JULIA,
+}
+
+impl FromStr for Fractal {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, ()> {
+        match s {
+            "mandelbrot" => Ok(Fractal::MANDELBROT),
+            "julia" => Ok(Fractal::JULIA),
+            _ => Err(()),
+        }
+    }
+}
+
+impl Fractal {
+    /// Given a type of Fractal, calculate the result
+    fn calculate(&self, c: Complex<f64>, seed: Complex<f64>, limit: u32) -> FractalResult {
+        match self {
+            Fractal::MANDELBROT => mandelbrot(c, seed, limit),
+            Fractal::JULIA => julia(c, seed, limit),
+        }
+    }
 }
 
 /// Try to determine if `c` is in the Mandelbrot set, using
 /// at most `limit` iterations.
 ///
 /// Returns a `FractalResult`, with a pair consisting of the escape value and final z value
-fn mandelbrot(c: Complex<f64>, limit: u32) -> FractalResult {
-    let mut z = Complex { re: 0.0, im: 0.0 };
+fn mandelbrot(c: Complex<f64>, seed: Complex<f64>, limit: u32) -> FractalResult {
+    let mut z = seed;
     for i in 0..limit {
         z = z * z + c;
         if z.norm_sqr() > 4.0 {
@@ -50,8 +72,22 @@ fn mandelbrot(c: Complex<f64>, limit: u32) -> FractalResult {
 
 /// Try to determine if `z` is in the Julia set, using
 /// at most `limit` iterations.
-fn julia(z: Complex<f64>, seed: Complex<f64>, limit: u32) -> FractalResult {
-    unimplemented!()
+fn julia(start: Complex<f64>, seed: Complex<f64>, limit: u32) -> FractalResult {
+    let mut z = start;
+    for i in 0..limit {
+        z = z * z + seed;
+        if z.norm_sqr() > 4.0 {
+            return FractalResult {
+                escape: limit - i,
+                value: z,
+            };
+        }
+    }
+
+    FractalResult {
+        escape: 0,
+        value: z,
+    }
 }
 
 /// Parse the string `s` as a coordinate pair, like `"400x600"` or `"1.0,1.5"`.
@@ -113,17 +149,16 @@ pub fn render_to_result(
     bounds: (usize, usize),
     upper_left: Complex<f64>,
     lower_right: Complex<f64>,
-    method: Fractals,
+    method: Fractal,
+    seed: Complex<f64>,
+    limit: u32,
 ) {
     assert!(pixels.len() == bounds.0 * bounds.1);
 
     for row in 0..bounds.1 {
         for column in 0..bounds.0 {
             let point = pixel_to_point(bounds, (column, row), upper_left, lower_right);
-            pixels[row * bounds.0 + column] = match method {
-                Fractals::MANDEL => mandelbrot(point, 255),
-                Fractals::JULIA => julia(Complex { re: 0.0, im: 0.0 }, point, 255),
-            };
+            pixels[row * bounds.0 + column] = method.calculate(point, seed, limit);
         }
     }
 }
