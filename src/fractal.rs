@@ -24,6 +24,7 @@ impl FractalResult {
 pub enum Fractal {
     MANDELBROT,
     JULIA,
+    NEWTON,
 }
 
 impl FromStr for Fractal {
@@ -33,6 +34,7 @@ impl FromStr for Fractal {
         match s {
             "mandelbrot" => Ok(Fractal::MANDELBROT),
             "julia" => Ok(Fractal::JULIA),
+            "newton" => Ok(Fractal::NEWTON),
             _ => Err(()),
         }
     }
@@ -44,6 +46,7 @@ impl Fractal {
         match self {
             Fractal::MANDELBROT => mandelbrot(c, seed, limit),
             Fractal::JULIA => julia(c, seed, limit),
+            Fractal::NEWTON => newton(c, seed, limit),
         }
     }
 }
@@ -82,6 +85,28 @@ fn julia(start: Complex<f64>, seed: Complex<f64>, limit: u32) -> FractalResult {
                 value: z,
             };
         }
+    }
+
+    FractalResult {
+        escape: 0,
+        value: z,
+    }
+}
+
+/// Try to determine if `z` is in the Newton set
+fn newton(start: Complex<f64>, seed: Complex<f64>, limit: u32) -> FractalResult {
+    let pow = 3f64;
+    let mut z = start;
+    for i in 0..limit {
+        let newz = ((pow - 1.0) * z.powf(pow) + seed) / (pow * z.powf(pow - 1.0));
+        let bail = newz - z;
+        if bail.norm_sqr() <= 0.00001 {
+            return FractalResult {
+                escape: limit - i,
+                value: newz,
+            };
+        };
+        z = newz;
     }
 
     FractalResult {
