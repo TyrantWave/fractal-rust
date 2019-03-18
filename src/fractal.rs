@@ -42,7 +42,7 @@ impl FromStr for Fractal {
 
 impl Fractal {
     /// Given a type of Fractal, calculate the result
-    pub fn calculate(&self, c: Complex<f64>, seed: Complex<f64>, limit: u32) -> FractalResult {
+    pub fn calculate(self, c: Complex<f64>, seed: Complex<f64>, limit: u32) -> FractalResult {
         match self {
             Fractal::MANDELBROT => mandelbrot(c, seed, limit),
             Fractal::JULIA => julia(c, seed, limit),

@@ -4,13 +4,13 @@ use image::ColorType;
 use rayon::prelude::*;
 
 use std::fs::File;
-use std::io::Write;
 use std::str::FromStr;
 
 mod fractal;
 use fractal::*;
 
 mod coloring;
+#[allow(unused_imports)]
 use coloring::*;
 
 /// Write the given buffer of `pixels`, with dimensions `bounds` into the file `filename`.
@@ -34,23 +34,15 @@ fn write_image(
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     if args.len() != 8 {
-        writeln!(
-            std::io::stderr(),
-            "Usage: fractal FILE METHOD PIXELS UPPERLEFT LOWERRIGHT SEED LIMIT"
-        )
-        .unwrap();
-        writeln!(
-            std::io::stderr(),
+        eprintln!("Usage: fractal FILE METHOD PIXELS UPPERLEFT LOWERRIGHT SEED LIMIT");
+        eprintln!(
             "Example: {} mandel.png  mandelbrot 1000x750 -1.20,0.35 -1,0.20 0,0 255",
             args[0]
-        )
-        .unwrap();
-        writeln!(
-            std::io::stderr(),
+        );
+        eprintln!(
             "Example: {} julia.png julia 1000x750 -1.50,1 1.5,-1 -0.8,0.156 255",
             args[0]
-        )
-        .unwrap();
+        );
         std::process::exit(1);
     }
     let method = Fractal::from_str(&args[2]).expect("error parsing fractal method");
